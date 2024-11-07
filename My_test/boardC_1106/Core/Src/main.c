@@ -19,11 +19,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "can.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "bsp_can.h"
+#include "CAN_receive.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,7 +56,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+	
 /* USER CODE END 0 */
 
 /**
@@ -64,22 +66,17 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+   uint32_t count = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-
-  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
-  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
-
-  NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
-
-  /* System interrupt init*/
+  HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  //uint8_t cmd0,cmd1,cmd2;
+	
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -91,18 +88,55 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_CAN1_Init();
+  MX_CAN2_Init();
+	
   /* USER CODE BEGIN 2 */
+	
+	can_filter_init();
   LL_SYSTICK_EnableIT();
+	extern motor_measure_lk motor_lk_m1;
+	extern CAN_HandleTypeDef hcan1;
+
+	int flag = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
-  {
-		LL_GPIO_SetOutputPin(GPIOH,LL_GPIO_PIN_12);
+  { 	
     /* USER CODE END WHILE */
-
+    
     /* USER CODE BEGIN 3 */
+		//get_LK_motor_measure_point();
+		
+		count ++;
+		HAL_Delay(1);
+		if(flag==0)
+		{ 
+			CAN_cmd_MF6015_cmd(startMotor);
+      flag=1;	
+			LL_GPIO_ResetOutputPin(GPIOH,LL_GPIO_PIN_12);
+		}
+		//CAN_cmd_MF6015_torque(500);
+		if(count >= 1000)
+		{
+		   CAN_cmd_MF6015_speed(100*360*2);
+			 LL_GPIO_SetOutputPin(GPIOH,LL_GPIO_PIN_12);
+		}
+		if(count <= 1000)
+		{
+			CAN_cmd_MF6015_speed(-100*360*2);
+		}
+		
+		if(count >= 3000)
+		{
+			count =0;
+			LL_GPIO_ResetOutputPin(GPIOH,LL_GPIO_PIN_12);
+		}
+		//CAN_cmd_MF6015_data();
+	  //HAL_CAN_RxFifo0MsgPendingCallback(&hcan1);		
+		
   }
   /* USER CODE END 3 */
 }
@@ -143,8 +177,13 @@ void SystemClock_Config(void)
   {
 
   }
-  LL_Init1msTick(168000000);
   LL_SetSystemCoreClock(168000000);
+
+   /* Update the time base */
+  if (HAL_InitTick (TICK_INT_PRIORITY) != HAL_OK)
+  {
+    Error_Handler();
+  }
 }
 
 /* USER CODE BEGIN 4 */

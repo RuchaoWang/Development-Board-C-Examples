@@ -93,7 +93,7 @@ int main(void)
   MX_CAN1_Init();
   MX_CAN2_Init();
   /* USER CODE BEGIN 2 */
-    can_filter_init();
+   can_filter_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
