@@ -20,12 +20,16 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "can.h"
+#include "dma.h"
+#include "spi.h"
+#include "tim.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bsp_can.h"
 #include "CAN_receive.h"
+#include "BMI088driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,7 +60,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-	
+ fp32 gyro[3], accel[3], temp;
 /* USER CODE END 0 */
 
 /**
@@ -88,17 +92,25 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_CAN1_Init();
   MX_CAN2_Init();
-	
+  MX_SPI1_Init();
+  MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
 	
 	can_filter_init();
   LL_SYSTICK_EnableIT();
 	extern motor_measure_lk motor_lk_m1;
 	extern CAN_HandleTypeDef hcan1;
+	BMI088_init();
+  while(BMI088_init())
+  {
+       ;
+  }
 
 	int flag = 0;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -106,9 +118,12 @@ int main(void)
   while (1)
   { 	
     /* USER CODE END WHILE */
-    
+
     /* USER CODE BEGIN 3 */
 		//get_LK_motor_measure_point();
+		
+	  BMI088_read(gyro, accel, &temp);
+    //HAL_Delay(1);
 		
 		count ++;
 		HAL_Delay(1);

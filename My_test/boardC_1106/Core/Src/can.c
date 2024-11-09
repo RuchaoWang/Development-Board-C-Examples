@@ -47,7 +47,6 @@ void MX_CAN1_Init(void)
   {
     Error_Handler();
   }
-	HAL_CAN_MspInit(&hcan1); //initiate GPIO
 
 }
 /* CAN2 init function */
@@ -70,7 +69,6 @@ void MX_CAN2_Init(void)
   {
     Error_Handler();
   }
-	HAL_CAN_MspInit(&hcan2);  //initiate GPIO
 
 }
 
